@@ -1,0 +1,11 @@
+Source: python3-decorated-paho-mqtt
+Section: python
+Priority: optional
+Maintainer: Jonathan Krebs <jonny@git2025.bruckbu.de>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-setuptools, python3-paho-mqtt
+Standards-Version: 4.6.2
+
+Package: python3-decorated-paho-mqtt
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}
+Description: Wrapper for Paho MQTT with declarative subscriptions and topic parsing utilities
