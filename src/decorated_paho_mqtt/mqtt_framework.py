@@ -52,7 +52,13 @@ class GenericMqttEndpoint:
         for attribute in self.__class__.__dict__.values():
             if hasattr(attribute, _SUBSCRIBE_DECORATOR_NAME):
                 decorated_function = attribute
-                topic_pattern, kwargs = getattr(decorated_function, _SUBSCRIBE_DECORATOR_NAME)
+                topic_gen, kwargs = getattr(decorated_function, _SUBSCRIBE_DECORATOR_NAME)
+                if callable(topic_gen):
+                    topic_pattern = topic_gen(self)
+                elif isinstance(topic_gen, str):
+                    topic_pattern = topic_gen
+                else:
+                    raise TypeError(f"The topic in subscribe_generator must be callable or a str, got {repr(topic_gen)}")
 
                 if topic_pattern in self._managed_subsciptions:
                     raise Exception(
@@ -125,7 +131,12 @@ class GenericMqttEndpoint:
     @staticmethod
     def subscribe_decorator(topic, **kwargs):
         """
+        Subscribes to topic and calls the decorated method when a matching message is received.
         This must be the outermost decorator (except for other similar nop-decorators)
+
+        If topic is function, it is called with the GenericMqttEndpoint instance as argument to produce the topic.
+        This is done in GenericMqttEndpoint.__init__.
+        example: @subscribe_decorator(lambda self: f"door/{self.id}/+")
 
         Avoid overlapping subscriptions or handle duplicates.
         Uses the same kwargs as paho.mqtt.client.Client.subscribe()
