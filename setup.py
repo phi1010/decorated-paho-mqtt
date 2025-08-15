@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 setuptools.setup(
     name='decorated_paho_mqtt',
-    version='1.1.0',
+    version='1.1.1',
     url='https://github.com/phi1010/decorated-paho-mqtt',
     author='Phillip Kuhrt',
     author_email='mail@phi1010.com',
