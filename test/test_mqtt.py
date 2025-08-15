@@ -26,7 +26,7 @@ def pushd(new_dir):
 @pytest.fixture()
 def mqtt_server():
     print("Starting MQTT server")
-    with pushd(Path(__file__).parent) as dir:
+    with pushd(Path(__file__).parent):
         process = Popen(["docker", "compose", "up", "mqtt"])
     print("Waiting for MQTT server to be available")
     start = time.time()
@@ -47,7 +47,8 @@ def mqtt_server():
                 process.terminate()
                 time.sleep(2)
                 process.kill()
-                run(["docker", "compose", "down"], check=True)
+                with pushd(Path(__file__).parent):
+                    run(["docker", "compose", "down"], check=True)
                 raise Exception("MQTT server did not start in time")
             continue
     yield process
@@ -55,11 +56,13 @@ def mqtt_server():
     process.terminate()
     time.sleep(2)
     process.kill()
-    run(["docker", "compose", "down"], check=True)
+    with pushd(Path(__file__).parent):
+        run(["docker", "compose", "down"], check=True)
 
 
 def test_mqtt_client(mqtt_server):
     received = set()
+
     class MyMqtt(GenericMqttEndpoint):
         def __init__(self, *args, **kwargs):
             self.b = "b"
@@ -76,7 +79,7 @@ def test_mqtt_client(mqtt_server):
             assert d_e[1] == "e"
             received.add("static")
 
-        @GenericMqttEndpoint.subscribe_decorator(lambda self:f"a2/{self.b}/c/#", qos=2)
+        @GenericMqttEndpoint.subscribe_decorator(lambda self: f"a2/{self.b}/c/#", qos=2)
         def receive_something2(self, d_e, *, client, userdata, message):
             print("Received something with lambda topic:", d_e)
             assert len(d_e) == 2
@@ -108,7 +111,7 @@ def test_mqtt_client(mqtt_server):
     while not mqtt._mqttc.is_connected():
         time.sleep(0.1)
     print("Connected to MQTT server")
-    mqtt.send_something("b","d","e")
+    mqtt.send_something("b", "d", "e")
     time.sleep(5)
 
     assert received == {"static", "lambda"}
