@@ -54,7 +54,7 @@ class MyMqtt(GenericMqttEndpoint):
         assert d_e[1] == "e"
 
     def send_something(self, b, d, e):
-        self.publish("a/+/c/#", (b, (d, e)), qos=2, retain=False, payload=json.dumps(None))
+        self.publish("a/+/c/#", b, (d, e), qos=2, retain=False, payload=json.dumps(None))
 
     def _on_log(self, client, userdata, level, buf):
         super(MyMqtt, self)._on_log(client, userdata, level, buf)
