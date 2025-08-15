@@ -44,7 +44,7 @@ class GenericMqttEndpoint:
         self._mqttc.on_message = self._on_message
         self._mqttc.on_log = self._on_log
 
-        self._managed_subsciptions = dict()
+        self._managed_subscriptions = dict()
         """
         This dictionary maps subscription topics to subscription options
         """
@@ -60,26 +60,28 @@ class GenericMqttEndpoint:
                 else:
                     raise TypeError(f"The topic in subscribe_generator must be callable or a str, got {repr(topic_gen)}")
 
-                if topic_pattern in self._managed_subsciptions:
+                if topic_pattern in self._managed_subscriptions:
                     raise Exception(
                         "A client cannot subscribe to an identical topic filter multiple times!")
                 else:
-                    self._managed_subsciptions[topic_pattern] = kwargs
+                    self._managed_subscriptions[topic_pattern] = kwargs
 
                 # This function introduces a scope,
                 #  to avoid a changing decorated_function variable
                 #  cause changing behaviour of call_decorated_function
-                def create_caller(decorated_function):
+                def create_caller(decorated_function, topic_pattern):
                     # the decorated_function has not yet a self object; thus we need this wrapper
                     @wraps(decorated_function)
                     def call_decorated_function(client, userdata, message):
                         variables = unpack_topic(topic_pattern, message.topic)
                         return decorated_function(self, client=client, userdata=userdata, message=message, *variables)
-
+                    #print(f"Returing {call_decorated_function} for {decorated_function} with topic {topic_pattern} and kwargs {kwargs}")
                     return call_decorated_function
 
                 # this is done only once, not on every reconnect / resubscribe.
-                self._mqttc.message_callback_add(topic_pattern, create_caller(decorated_function))
+                caller = create_caller(decorated_function, topic_pattern)
+                print(f"Subscribing {caller} to {topic_pattern} with {kwargs}")
+                self._mqttc.message_callback_add(topic_pattern, caller)
 
     def connect(self):
         # currently, this will retry first connects, we don't need bettermqtt
@@ -107,7 +109,8 @@ class GenericMqttEndpoint:
         #  which is not bad, if they are idempotent
 
         # We MUST NOT add message callbacks here, otherwise, they may be added twice upon reconnect after session expiry
-        for topic_filter, kwargs in self._managed_subsciptions.items():
+        for topic_filter, kwargs in self._managed_subscriptions.items():
+            #print(topic_filter, kwargs)
             self._mqttc.subscribe(topic=topic_filter, **kwargs)
 
     def _on_disconnect(self, client, userdata, rc: ReasonCodes, properties: Properties = None):
@@ -120,8 +123,7 @@ class GenericMqttEndpoint:
     def _on_message(self, client, userdata, message: MQTTMessage):
         message_dict = {attr: getattr(message, attr) for attr in dir(message) if not attr.startswith("_")}
         message_properties: Properties = message.properties
-        message_properties_dict = {attr: getattr(message_properties, attr) for attr in dir(message_properties) if
-                                   not attr.startswith("_")}
+        message_properties_dict = {attr: getattr(message_properties, attr) for attr in dir(message_properties) if not attr.startswith("_")}
 
 
     def _on_log(self, client, userdata, level, buf):
@@ -161,7 +163,7 @@ class GenericMqttEndpoint:
         :return:
         """
         topic = pack_topic(topic_pattern, *topic_data)
-        self._mqttc.publish(topic, **kwargs)
+        return self._mqttc.publish(topic, **kwargs)
 
 
 _SUBSCRIBE_DECORATOR_NAME = name = __name__ + "." + GenericMqttEndpoint.subscribe_decorator.__qualname__
@@ -186,6 +188,8 @@ def pack_topic(pattern: str, *data):
         elements = list(remainder)
         for element in elements:
             check_data_is_sane(element)
+        if len(elements) == 0:
+            raise Exception("You should provide a non-empty list or tuple to replace a '#'.")
         pattern = pattern.replace("#", "/".join(elements), 1)
     if data:
         raise Exception("Unused placeholders are present")

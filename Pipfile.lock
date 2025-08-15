@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d2721cb8ba7148e86930c47662bd38075f69b3d8b6d530c4a5ae47bbdc9aa50b"
+            "sha256": "b02286776ef022454df87d752c5a8e7d0abbbf73fbfbe9aadcae62974470344c"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.9"
+            "python_version": "3"
         },
         "sources": [
             {
@@ -18,11 +18,28 @@
     "default": {
         "paho-mqtt": {
             "hashes": [
-                "sha256:9feb068e822be7b3a116324e01fb6028eb1d66412bf98595ae72698965cb1cae"
+                "sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834",
+                "sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee"
             ],
             "index": "pypi",
-            "version": "==1.5.1"
+            "markers": "python_version >= '3.7'",
+            "version": "==2.1.0"
         }
     },
-    "develop": {}
+    "develop": {
+        "decorated-paho-mqtt": {
+            "editable": true,
+            "file": ".",
+            "markers": "python_version >= '3.7'"
+        },
+        "paho-mqtt": {
+            "hashes": [
+                "sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834",
+                "sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==2.1.0"
+        }
+    }
 }
