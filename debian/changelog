@@ -1,0 +1,4 @@
+python3-decorated-paho-mqtt (1.0.5) unstable; urgency=medium
+
+  * Initial packaging
+ -- Jonathan Krebs <jonny@git2025.bruckbu.de>  Thu, 07 Aug 2025 12:00:00 +0000
